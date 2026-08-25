@@ -49,7 +49,7 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     res.status(400);
     return res.json({ error: 'No file uploaded' });
   }
-  const baseUrl = process.env.CLIENT_URL || `http://localhost:${process.env.PORT || 5000}`;
+  const baseUrl = `http://localhost:${process.env.PORT || 5000}`;
   res.json({ url: `${baseUrl}/uploads/${req.file.filename}` });
 });
 
