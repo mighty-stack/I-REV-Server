@@ -11,6 +11,7 @@ import tagRoutes from './routes/tagRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import seoRoutes from './routes/seoRoutes.js';
 import { upload } from './middleware/upload.js';
+import User from './models/User.js';
 
 dotenv.config();
 
@@ -67,6 +68,15 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-connectDB().then(() => {
+connectDB().then(async () => {
+  const existingAdmin = await User.findOne({ role: 'admin' });
+  if (!existingAdmin) {
+    await User.create({
+      name: 'Admin',
+      email: process.env.EMAIL_ADMIN,
+      password: process.env.EMAIL_PASSWORD,
+      role: 'admin',
+    });
+  }
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 });

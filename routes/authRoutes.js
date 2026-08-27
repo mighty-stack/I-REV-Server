@@ -2,11 +2,11 @@ import { Router } from 'express';
 import asyncHandler from 'express-async-handler';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import { protect } from '../middleware/auth.js';
+import { protect, adminOnly } from '../middleware/auth.js';
 
 const router = Router();
 
-const signToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET || 'devsecret', { expiresIn: '30d' });
+const signToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '12h' });
 
 router.post(
   '/login',
@@ -42,6 +42,7 @@ router.get(
 router.post(
   '/register',
   protect,
+  adminOnly,
   asyncHandler(async (req, res) => {
     const { name, email, password, role, bio } = req.body;
     if (!name || !email || !password) {
@@ -88,6 +89,38 @@ router.put(
       bio: updated.bio,
       avatar: updated.avatar,
     });
+  })
+);
+
+router.get(
+  '/users',
+  protect,
+  adminOnly,
+  asyncHandler(async (req, res) => {
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    res.json(users);
+  })
+);
+
+router.delete(
+  '/users/:id',
+  protect,
+  adminOnly,
+  asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+    if (user.role === 'admin') {
+      const adminCount = await User.countDocuments({ role: 'admin' });
+      if (adminCount <= 1) {
+        res.status(400);
+        throw new Error('Cannot delete the last admin');
+      }
+    }
+    await user.deleteOne();
+    res.json({ message: 'User deleted' });
   })
 );
 
