@@ -8,21 +8,24 @@ import Tag from './models/Tag.js';
 
 dotenv.config();
 
+const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_ADMIN || 'admin@i-rev.com';
+const adminPassword = process.env.ADMIN_PASSWORD || process.env.EMAIL_PASSWORD || 'admin123';
+
 const seed = async () => {
   await connectDB();
 
   // Create admin user
-  const existingAdmin = await User.findOne({ email: 'admin@i-rev.com' });
+  const existingAdmin = await User.findOne({ email: adminEmail });
   let admin;
   if (!existingAdmin) {
     admin = await User.create({
       name: 'Admin User',
-      email: 'admin@i-rev.com',
-      password: 'admin123',
+      email: adminEmail,
+      password: adminPassword,
       role: 'admin',
       bio: 'Site administrator and editor.',
     });
-    console.log('Admin user created: admin@i-rev.com / admin123');
+    console.log(`Admin user created: ${adminEmail}`);
   } else {
     admin = existingAdmin;
     console.log('Admin user already exists');

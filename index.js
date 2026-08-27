@@ -20,11 +20,15 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'https://i-rev-blog.vercel.app',
+  'http://localhost:5173',
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL,
-      'http://localhost:5173'],
-
+    origin: allowedOrigins,
     credentials: true,
   })
 );
@@ -50,7 +54,7 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     res.status(400);
     return res.json({ error: 'No file uploaded' });
   }
-  const baseUrl = `http://localhost:${process.env.PORT || 5000}`;
+  const baseUrl = `http://localhost:${process.env.PORT}`;
   res.json({ url: `${baseUrl}/uploads/${req.file.filename}` });
 });
 
@@ -66,15 +70,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
+const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_ADMIN;
+const adminPassword = process.env.ADMIN_PASSWORD || process.env.EMAIL_PASSWORD;
 
 connectDB().then(async () => {
-  const existingAdmin = await User.findOne({ role: 'admin' });
+  const existingAdmin = await User.findOne({ email: adminEmail });
   if (!existingAdmin) {
     await User.create({
       name: 'Admin',
-      email: process.env.EMAIL_ADMIN,
-      password: process.env.EMAIL_PASSWORD,
+      email: adminEmail,
+      password: adminPassword,
       role: 'admin',
     });
   }
